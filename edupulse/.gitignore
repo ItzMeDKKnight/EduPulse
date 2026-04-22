@@ -17,10 +17,11 @@ dist-ssr
 .env.local
 .env.*.local
 
-# Editor directories and files
+# Editor directories and AI files
 .vscode/*
 !.vscode/extensions.json
 .idea
+.agents/
 .DS_Store
 *.suo
 *.ntvs*
