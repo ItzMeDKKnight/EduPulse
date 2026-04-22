@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Outfit:wght@100..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #1a56db;
+  --primary-dark: #1e429f;
+  --secondary: #0e9f6e;
+  --warning: #ff5a1f;
+  --danger: #e02424;
+  --surface: #f9fafb;
+  --card: #ffffff;
+  --text-primary: #111928;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+  --sidebar-width: 260px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-primary);
+  background-color: var(--surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-card rounded-card;
+  }
+
+  .gradient-primary {
+    @apply bg-gradient-to-br from-primary-500 to-primary-700;
+  }
+
+  .gradient-secondary {
+    @apply bg-gradient-to-br from-secondary-500 to-secondary-700;
+  }
+
+  .gradient-hero {
+    @apply bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-medium 
+           rounded-btn transition-all duration-200 shadow-sm hover:shadow-md 
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-primary-500/30;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2.5 bg-secondary-500 hover:bg-secondary-600 text-white font-medium 
+           rounded-btn transition-all duration-200 shadow-sm hover:shadow-md 
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2.5 bg-danger-500 hover:bg-danger-600 text-white font-medium 
+           rounded-btn transition-all duration-200 shadow-sm hover:shadow-md 
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2.5 bg-transparent hover:bg-gray-100 text-gray-700 font-medium 
+           rounded-btn transition-all duration-200 
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply px-4 py-2.5 bg-transparent border border-gray-300 hover:bg-gray-50 
+           text-gray-700 font-medium rounded-btn transition-all duration-200 
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-white border border-gray-300 rounded-btn 
+           text-sm text-gray-900 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500
+           transition-all duration-200;
+  }
+
+  .input-error {
+    @apply border-danger-500 focus:ring-danger-500/30 focus:border-danger-500;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1.5;
+  }
+
+  .error-text {
+    @apply text-xs text-danger-500 mt-1;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-admin {
+    @apply bg-purple-100 text-purple-700;
+  }
+
+  .badge-teacher {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .badge-student {
+    @apply bg-green-100 text-green-700;
+  }
+
+  .badge-parent {
+    @apply bg-orange-100 text-orange-700;
+  }
+
+  .badge-present {
+    @apply bg-green-100 text-green-700;
+  }
+
+  .badge-absent {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .badge-late {
+    @apply bg-yellow-100 text-yellow-700;
+  }
+
+  .badge-excused {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .badge-pending {
+    @apply bg-yellow-100 text-yellow-700;
+  }
+
+  .badge-submitted {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .badge-graded {
+    @apply bg-green-100 text-green-700;
+  }
+
+  .badge-draft {
+    @apply bg-gray-100 text-gray-700;
+  }
+
+  .badge-active {
+    @apply bg-green-100 text-green-700;
+  }
+
+  .badge-closed {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .stat-card {
+    @apply bg-white rounded-card shadow-card p-6 border border-gray-100 
+           hover:shadow-card-hover transition-all duration-300;
+  }
+
+  .page-title {
+    @apply text-2xl font-heading font-bold text-gray-900;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-gray-500 mt-1;
+  }
+
+  .section-title {
+    @apply text-lg font-heading font-semibold text-gray-900;
+  }
+
+  .table-container {
+    @apply bg-white rounded-card shadow-card border border-gray-100 overflow-hidden;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Skeleton loader animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Toast overrides */
+.toast-custom {
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Calendar day colors */
+.cal-present { @apply bg-green-100 text-green-800 border-green-200; }
+.cal-absent { @apply bg-red-100 text-red-800 border-red-200; }
+.cal-late { @apply bg-yellow-100 text-yellow-800 border-yellow-200; }
+.cal-excused { @apply bg-blue-100 text-blue-800 border-blue-200; }
