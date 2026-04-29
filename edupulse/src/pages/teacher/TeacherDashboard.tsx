@@ -64,7 +64,7 @@ export default function TeacherDashboard() {
             {classes.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">No classes assigned</p>
             ) : (
-              classes.map((cls) => (
+              classes.map((cls: Class) => (
                 <div key={cls.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
                   <div>
                     <p className="text-sm font-medium">{cls.name}</p>
@@ -84,7 +84,7 @@ export default function TeacherDashboard() {
             {assignments.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">No assignments</p>
             ) : (
-              assignments.map((a) => (
+              assignments.map((a: Assignment) => (
                 <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100">
                   <div>
                     <p className="text-sm font-medium">{a.title}</p>
@@ -105,7 +105,7 @@ export default function TeacherDashboard() {
           {quizzes.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-4">No quizzes created</p>
           ) : (
-            quizzes.map((q) => (
+            quizzes.map((q: Quiz) => (
               <div key={q.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100">
                 <div>
                   <p className="text-sm font-medium">{q.title}</p>

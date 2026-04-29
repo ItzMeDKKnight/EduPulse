@@ -12,71 +12,28 @@ export interface StudentPerformanceData {
   quizzes: { total: number; attempted: number; avg_score_percent: number };
 }
 
+import supabase from './supabase';
+
 export async function generatePerformanceReport(studentData: StudentPerformanceData): Promise<string> {
-  const apiKey = import.meta.env.VITE_CLAUDE_API_KEY;
-
-  if (!apiKey || apiKey === 'your_anthropic_api_key') {
-    return generateMockReport(studentData);
-  }
-
   try {
-    const attendancePercent = studentData.attendance.total > 0
-      ? Math.round((studentData.attendance.present / studentData.attendance.total) * 100)
-      : 0;
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `You are an expert educational psychologist and academic performance analyst. 
-Analyze the student's academic data and provide a detailed, actionable performance report. 
-Be specific, empathetic, and constructive. Format your response in clear sections using markdown.
-Always provide: Overall Assessment, Subject Analysis, Attendance Impact, Risk Level (Low/Medium/High), 
-and 5 specific actionable recommendations. Keep tone encouraging but honest.`,
-        messages: [
-          {
-            role: 'user',
-            content: `Please analyze this student's academic performance data and generate a comprehensive report:
-
-Student: ${studentData.name}
-
-ATTENDANCE:
-- Present: ${studentData.attendance.present}/${studentData.attendance.total} days (${attendancePercent}%)
-- Absent: ${studentData.attendance.absent} days
-- Late: ${studentData.attendance.late} days
-
-MARKS/GRADES:
-${studentData.marks.map((m) => `- ${m.subject} (${m.exam_type}): ${m.marks_obtained}/${m.max_marks} (${Math.round((m.marks_obtained / m.max_marks) * 100)}%) on ${m.date}`).join('\n')}
-
-ASSIGNMENTS:
-- Submitted: ${studentData.assignments.submitted}/${studentData.assignments.total}
-- Average marks on graded: ${studentData.assignments.avg_marks}%
-
-QUIZZES:
-- Attempted: ${studentData.quizzes.attempted}/${studentData.quizzes.total}
-- Average quiz score: ${studentData.quizzes.avg_score_percent}%
-
-Generate a detailed performance analysis report.`,
-          },
-        ],
-      }),
+    // Call the Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('generate-report', {
+      body: { studentData }
     });
 
-    if (!response.ok) {
-      throw new Error(`Claude API error: ${response.status}`);
+    if (error) {
+      console.warn('Edge Function error, falling back to mock:', error);
+      return generateMockReport(studentData);
     }
 
-    const data = await response.json();
-    return data.content[0].text;
+    if (data?.error) {
+      console.warn('AI Generation error, falling back to mock:', data.error);
+      return generateMockReport(studentData);
+    }
+
+    return data.report;
   } catch (error) {
-    console.error('Claude API error:', error);
+    console.error('Failed to call Edge Function:', error);
     return generateMockReport(studentData);
   }
 }
