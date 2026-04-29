@@ -46,11 +46,11 @@ export default function MyGrades() {
     setSubjects(Object.keys(subjectMap));
 
     // Line: marks over time per subject
-    const dateMap: Record<string, Record<string, number>> = {};
+    const dateMap: Record<string, any> = {};
     marks.forEach((m) => {
       const date = m.exam_date || m.created_at.split('T')[0];
-      if (!dateMap[date]) dateMap[date] = { date } as Record<string, number>;
-      (dateMap[date] as Record<string, unknown>)[m.subject] = Math.round((m.marks_obtained / m.max_marks) * 100);
+      if (!dateMap[date]) dateMap[date] = { date };
+      dateMap[date][m.subject] = Math.round((m.marks_obtained / m.max_marks) * 100);
     });
     setLineData(Object.values(dateMap).sort((a, b) => String(a.date).localeCompare(String(b.date))));
   }, [marks]);
