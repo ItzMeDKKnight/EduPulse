@@ -39,12 +39,20 @@ export default function QuizBuilder() {
   }
 
   async function handleCreateQuiz() {
+    if (!quizForm.class_id || !quizForm.title || !quizForm.start_time || !quizForm.end_time) {
+      toast.error('Please fill all required fields, including timings');
+      return;
+    }
     try {
+      console.log('Creating quiz with data:', quizForm);
       const quiz = await createQuiz({ ...quizForm, created_by: profile!.id });
       toast.success('Quiz created!');
       setSelectedQuiz(quiz as unknown as Quiz);
       setStep(2);
-    } catch { toast.error('Failed'); }
+    } catch (err: any) { 
+      console.error('Quiz creation error:', err);
+      toast.error(err.message || 'Failed to create quiz'); 
+    }
   }
 
   async function handleAddQuestion() {
@@ -115,9 +123,12 @@ export default function QuizBuilder() {
               key: 'actions', label: 'Actions',
               render: (item) => (
                 <div className="flex items-center gap-1">
-                  <button onClick={() => openQuestions(item as unknown as Quiz)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500" title="Edit Questions"><Eye size={16} /></button>
+                  <button onClick={() => openQuestions(item as unknown as Quiz)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500" title="View Questions"><Eye size={16} /></button>
                   {String(item.status) === 'draft' && (
-                    <button onClick={() => { setSelectedQuiz(item as unknown as Quiz); handleActivate(); }} className="p-1.5 rounded-lg hover:bg-green-50 text-green-600" title="Activate"><Play size={16} /></button>
+                    <>
+                      <button onClick={() => { setSelectedQuiz(item as unknown as Quiz); setStep(2); fetchQuestions(String(item.id)); setShowCreate(true); }} className="p-1.5 rounded-lg hover:bg-orange-50 text-orange-500" title="Add Questions"><Plus size={16} /></button>
+                      <button onClick={() => { setSelectedQuiz(item as unknown as Quiz); handleActivate(); }} className="p-1.5 rounded-lg hover:bg-green-50 text-green-600" title="Activate"><Play size={16} /></button>
+                    </>
                   )}
                   {String(item.status) === 'active' && (
                     <button onClick={() => handleClose(String(item.id))} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500" title="Close"><Square size={16} /></button>

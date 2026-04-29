@@ -64,6 +64,10 @@ export default function ManageClasses() {
   }
 
   async function handleSave() {
+    if (!form.name || !form.subject || !form.teacher_id) {
+      toast.error('Please fill all required fields');
+      return;
+    }
     try {
       if (editClass) {
         const { error } = await supabase.from('classes').update(form).eq('id', editClass.id);
@@ -76,7 +80,9 @@ export default function ManageClasses() {
       }
       setShowModal(false);
       loadData();
-    } catch { toast.error('Failed to save'); }
+    } catch (err: any) { 
+      toast.error(err.message || 'Failed to save'); 
+    }
   }
 
   async function handleDelete(id: string) {

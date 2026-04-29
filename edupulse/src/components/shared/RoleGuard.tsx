@@ -10,9 +10,20 @@ interface RoleGuardProps {
 
 export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   const { isAuthenticated, role, isLoading, isInitialized } = useAuth();
+  const [timedOut, setTimedOut] = React.useState(false);
   const location = useLocation();
 
-  if (!isInitialized || isLoading) {
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.warn('RoleGuard loading timed out');
+        setTimedOut(true);
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  if ((!isInitialized || isLoading) && !timedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface">
         <div className="flex flex-col items-center gap-4">

@@ -26,6 +26,11 @@ export default function StudentDashboard() {
   }, [profile]);
 
   async function loadDashboard() {
+    const timeout = setTimeout(() => {
+      console.warn('Dashboard loading timed out');
+      setLoading(false);
+    }, 7000);
+
     try {
       const [{ data: att }, { data: subs }, { data: enrollments }] = await Promise.all([
         supabase.from('attendance').select('*').eq('student_id', profile!.id),
@@ -33,6 +38,7 @@ export default function StudentDashboard() {
         supabase.from('enrollments').select('class_id').eq('student_id', profile!.id),
       ]);
 
+      clearTimeout(timeout);
       setAttendanceData((att || []) as unknown as Attendance[]);
       setPendingAssignments((subs || []) as unknown as AssignmentSubmission[]);
 
@@ -45,6 +51,7 @@ export default function StudentDashboard() {
       const report = await fetchLatestReport(profile!.id);
       if (report) setAiReport(report.report_text);
     } catch (err) {
+      clearTimeout(timeout);
       console.error(err);
     } finally {
       setLoading(false);

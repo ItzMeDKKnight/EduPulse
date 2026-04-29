@@ -8,7 +8,10 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Badge from '../../components/ui/Badge';
 import { CalendarCheck, FileText, ClipboardList, Brain, AlertTriangle, User } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
+import Modal from '../../components/ui/Modal';
+import Button from '../../components/ui/Button';
 import type { Profile, Attendance, AssignmentSubmission, Quiz } from '../../types';
+import toast from 'react-hot-toast';
 
 export default function ParentDashboard() {
   const { profile } = useAuth();
@@ -85,20 +88,37 @@ export default function ParentDashboard() {
     return () => { supabase.removeChannel(channel); };
   }, [selectedChild]);
 
-  if (loading && children.length === 0) return <LoadingSpinner fullPage text="Loading..." />;
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [studentEmail, setStudentEmail] = useState('');
 
-  if (children.length === 0) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <h1 className="page-title">Parent Dashboard</h1>
-        <Card><CardBody className="text-center py-12">
-          <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p className="text-gray-500">No children linked to your account</p>
-          <p className="text-xs text-gray-400 mt-1">Link a child during registration or contact admin</p>
-        </CardBody></Card>
-      </div>
-    );
+  async function handleLinkStudent() {
+    if (!studentEmail) return;
+    try {
+      const { data: student, error: fetchErr } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', studentEmail)
+        .eq('role', 'student')
+        .single();
+      
+      if (fetchErr || !student) throw new Error('Student not found with this email');
+
+      const { error: linkErr } = await supabase
+        .from('parent_student_links')
+        .insert({ parent_id: profile!.id, student_id: student.id });
+      
+      if (linkErr) throw linkErr;
+
+      toast.success('Ward linked successfully!');
+      setShowLinkModal(false);
+      setStudentEmail('');
+      loadChildren();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to link ward');
+    }
   }
+
+  if (loading && children.length === 0) return <LoadingSpinner fullPage text="Loading..." />;
 
   const summary = getAttendanceSummary(attendance);
   const hasAbsentToday = attendance.some(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'absent');
@@ -110,29 +130,41 @@ export default function ParentDashboard() {
           <h1 className="page-title">Parent Dashboard</h1>
           <p className="page-subtitle">Monitor your child's academic progress</p>
         </div>
-        {children.length > 1 && (
-          <select
-            value={selectedChild?.id}
-            onChange={(e) => {
-              const child = children.find(c => c.id === e.target.value);
-              if (child) handleChildSelect(child);
-            }}
-            className="input-field w-auto"
-          >
-            {children.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
-          </select>
-        )}
+        <div className="flex gap-3">
+          <Button variant="secondary" icon={<User size={18} />} onClick={() => setShowLinkModal(true)}>Link New Ward</Button>
+          {children.length > 1 && (
+            <select
+              value={selectedChild?.id}
+              onChange={(e) => {
+                const child = children.find(c => c.id === e.target.value);
+                if (child) handleChildSelect(child);
+              }}
+              className="input-field w-auto"
+            >
+              {children.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+            </select>
+          )}
+        </div>
       </div>
 
-      {hasAbsentToday && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
-          <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-red-700">Absent Today</p>
-            <p className="text-xs text-red-500">{selectedChild?.full_name} was marked absent today</p>
-          </div>
-        </div>
-      )}
+      {children.length === 0 ? (
+        <Card><CardBody className="text-center py-12">
+          <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <p className="text-gray-500">No children linked to your account</p>
+          <p className="text-xs text-gray-400 mt-1">Use the "Link New Ward" button above to get started</p>
+        </CardBody></Card>
+      ) : (
+        <>
+          {hasAbsentToday && (
+            <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
+              <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-red-700">Absent Today</p>
+                <p className="text-xs text-red-500">{selectedChild?.full_name} was marked absent today</p>
+              </div>
+            </div>
+          )}
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Attendance %" value={`${summary.percentage}%`} icon={<CalendarCheck className="w-6 h-6 text-white" />} color="bg-gradient-to-br from-secondary-400 to-secondary-600" />
@@ -202,6 +234,29 @@ export default function ParentDashboard() {
           )}
         </CardBody>
       </Card>
+        </>
+      )}
+
+      {/* Link Ward Modal */}
+      <Modal isOpen={showLinkModal} onClose={() => setShowLinkModal(false)} title="Link New Ward">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">Enter your child's registered email address to link their account to your dashboard.</p>
+          <div>
+            <label className="label">Student Email</label>
+            <input 
+              type="email" 
+              value={studentEmail} 
+              onChange={(e) => setStudentEmail(e.target.value)} 
+              placeholder="student@example.com"
+              className="input-field"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button variant="ghost" onClick={() => setShowLinkModal(false)} className="flex-1">Cancel</Button>
+            <Button onClick={handleLinkStudent} className="flex-1">Link Ward</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

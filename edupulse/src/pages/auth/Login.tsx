@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getDashboardPath } from '../../lib/utils';
 import { GraduationCap, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '../../components/ui/Button';
 
 const loginSchema = z.object({
@@ -17,12 +17,19 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const { signIn, role } = useAuth();
+  const { signIn, role, isAuthenticated, isInitialized } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const { resetPassword } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isInitialized && isAuthenticated && role) {
+      navigate(getDashboardPath(role));
+    }
+  }, [isInitialized, isAuthenticated, role, navigate]);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),

@@ -1,8 +1,11 @@
-import { Menu, Bell, LogOut, ChevronRight } from 'lucide-react';
+import { Menu, Bell, LogOut, ChevronRight, Check } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useNotifications } from '../../hooks/useNotifications';
 import toast from 'react-hot-toast';
 import { useState, useRef, useEffect } from 'react';
+import { cn } from '../../lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -10,15 +13,21 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar }: HeaderProps) {
   const { profile, signOut } = useAuth();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -68,10 +77,65 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         {/* Right side */}
         <div className="flex items-center gap-3">
           {/* Notification Bell */}
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <Bell size={20} className="text-gray-600" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger-500 rounded-full" />
-          </button>
+          <div className="relative" ref={notificationRef}>
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Bell size={20} className="text-gray-600" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-danger-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-modal border border-gray-100 overflow-hidden animate-fade-in z-50">
+                <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <button 
+                      onClick={markAllAsRead}
+                      className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                    >
+                      <Check size={14} /> Mark all as read
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((n) => (
+                      <div 
+                        key={n.id} 
+                        onClick={() => markAsRead(n.id)}
+                        className={cn(
+                          "p-4 border-b border-gray-50 cursor-pointer transition-colors",
+                          !n.is_read ? "bg-primary-50/30 hover:bg-primary-50/50" : "hover:bg-gray-50"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={cn("text-sm", !n.is_read ? "font-semibold text-gray-900" : "text-gray-700")}>
+                            {n.title}
+                          </p>
+                          {!n.is_read && <div className="w-2 h-2 bg-primary-500 rounded-full mt-1.5" />}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{n.message}</p>
+                        <p className="text-[10px] text-gray-400 mt-2">
+                          {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center">
+                      <Bell size={24} className="mx-auto text-gray-300 mb-2" />
+                      <p className="text-sm text-gray-500">No notifications yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Avatar dropdown */}
           <div className="relative" ref={dropdownRef}>
@@ -89,13 +153,13 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 )}
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-gray-900">{profile?.full_name}</p>
+                <p className="text-sm font-medium text-gray-900 truncate max-w-[120px]">{profile?.full_name}</p>
                 <p className="text-xs text-gray-500 capitalize">{profile?.role}</p>
               </div>
             </button>
 
             {showDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-modal border border-gray-100 py-2 animate-fade-in">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-modal border border-gray-100 py-2 animate-fade-in z-50">
                 <button
                   onClick={handleSignOut}
                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-danger-500 hover:bg-danger-50 transition-colors"
